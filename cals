@@ -1,0 +1,46 @@
+import sqlite3
+import datetime
+
+def calculate(a, b, op):
+    try:
+        a, b = float(a), float(b)
+        result = {
+            '+': a + b,
+            '-': a - b,
+            '*': a * b,
+            '/': a / b if b != 0 else "Error: Divide by zero"
+        }.get(op, "Invalid operation")
+        log_operation(a, b, op, result)
+        return result
+    except ValueError:
+        return "Invalid numeric input"
+
+def log_operation(a, b, op, result):
+    conn = sqlite3.connect('history.db')
+    cur = conn.cursor()
+    cur.execute('''CREATE TABLE IF NOT EXISTS calculations (
+        id INTEGER PRIMARY KEY,
+        operand1 REAL,
+        operand2 REAL,
+        operator TEXT,
+        result TEXT,
+        timestamp TEXT
+    )''')
+    cur.execute("INSERT INTO calculations (operand1, operand2, operator, result, timestamp) VALUES (?, ?, ?, ?, ?)",
+                (a, b, op, str(result), str(datetime.datetime.now())))
+    conn.commit()
+    conn.close()
+
+def main():
+    print("Simple Calculator")
+    while True:
+        a = input("Enter first number (or 'exit'): ")
+        if a.lower() == 'exit':
+            break
+        op = input("Enter operation (+, -, *, /): ")
+        b = input("Enter second number: ")
+        result = calculate(a, b, op)
+        print("Result:", result)
+
+if __name__ == "__main__":
+    main()
